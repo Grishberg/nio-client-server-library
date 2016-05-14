@@ -3,11 +3,11 @@ package com.grishberg.utils.network.tcp.client;
 import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
 import com.grishberg.utils.network.interfaces.OnConnectionEstablishedListener;
 import com.grishberg.utils.network.interfaces.OnMessageListener;
+import com.grishberg.utils.network.tcp.BaseBufferedReader;
 import com.grishberg.utils.network.tcp.server.ChangeRequest;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.net.InetAddress;
@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * Created by grishberg on 09.05.16.
  */
-public class TcpClientImpl implements TcpClient, Runnable {
+public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
     private final Charset cs = Charset.forName("UTF-8");
     private Thread thread;
     private final OnMessageListener messageListener;
@@ -90,7 +90,10 @@ public class TcpClientImpl implements TcpClient, Runnable {
     }
 
     public void send(SocketChannel socketChannel, byte[] data) {
-
+        ByteBuffer buffer = ByteBuffer.allocate(4 + data.length)
+                .putInt(data.length)
+                .put(data);
+        //.wrap(data);
         // And queue the data we want written
         synchronized (this.pendingData) {
             List queue = (List) this.pendingData.get(socketChannel);
@@ -98,7 +101,7 @@ public class TcpClientImpl implements TcpClient, Runnable {
                 queue = new ArrayList();
                 this.pendingData.put(socketChannel, queue);
             }
-            queue.add(ByteBuffer.wrap(data));
+            queue.add(buffer);
             SelectionKey key = socketChannel.keyFor(this.selector);
             if (key != null && key.interestOps() != SelectionKey.OP_WRITE) {
                 this.pendingChanges.add(new ChangeRequest(socketChannel, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
@@ -159,7 +162,6 @@ public class TcpClientImpl implements TcpClient, Runnable {
 
     private void read(SelectionKey key) throws IOException {
         SocketChannel socketChannel = (SocketChannel) key.channel();
-
         // Clear out our read buffer so it's ready for new data
         this.readBuffer.clear();
 
@@ -167,6 +169,11 @@ public class TcpClientImpl implements TcpClient, Runnable {
         int numRead;
         try {
             numRead = socketChannel.read(this.readBuffer);
+            List<byte[]> packets = convertFromLvContainer( socketChannel, readBuffer, numRead);
+            // Handle the response
+            for (byte[] packet : packets) {
+                handleResponse(socketChannel, packet);
+            }
         } catch (IOException e) {
             // The remote forcibly closed the connection, cancel
             // the selection key and close the channel.
@@ -183,24 +190,12 @@ public class TcpClientImpl implements TcpClient, Runnable {
             socketChannel.close();
             return;
         }
-
-        // Handle the response
-        this.handleResponse(socketChannel, this.readBuffer.array(), numRead);
     }
 
-    private void handleResponse(SocketChannel socketChannel, byte[] data, int numRead) throws IOException {
-        // Make a correctly sized copy of the data before handing it
-        // to the client
-        byte[] rspData = new byte[numRead];
-        System.arraycopy(data, 0, rspData, 0, numRead);
-
-        // Look up the handler for this channel
-        RspHandler handler = (RspHandler) this.rspHandlers.get(socketChannel);
-
+    private void handleResponse(SocketChannel socketChannel, byte[] data) throws IOException {
         // And pass the response to it
         if (messageListener != null) {
-            byte[] message = Arrays.copyOf(data, numRead);
-            messageListener.onReceivedMessage(socketChannel.socket().getInetAddress().getHostAddress(), message);
+            messageListener.onReceivedMessage(socketChannel.socket().getInetAddress().getHostAddress(), data);
         }
     }
 
