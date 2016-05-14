@@ -1,9 +1,9 @@
 package com.grishberg.utils.network.tcp.server;
 
 import com.grishberg.utils.network.interfaces.OnMessageListener;
+import com.grishberg.utils.network.tcp.BaseBufferedReader;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Created by grishberg on 08.05.16.
  */
-public class TcpServerImpl implements Runnable, TcpServer {
+public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     private final Charset cs = Charset.forName("UTF-8");
     private Thread thread;
     // The host:port combination to listen on
@@ -65,19 +65,10 @@ public class TcpServerImpl implements Runnable, TcpServer {
     @Override
     public boolean sendMessage(String address, byte[] message) {
         SocketChannel socketChannel = clients.get(address);
-//        try {
         if (socketChannel != null) {
-            //socketChannel.write(msg);
-            //ByteBuffer buffer = ByteBuffer.wrap(message);
-            //socketChannel.write(buffer);
-            //System.out.println(msg);
-            //buffer.clear();
             send(socketChannel, message);
             return true;
         }
-//        } catch (IOException e){
-//            e.printStackTrace();
-//        }
         return false;
     }
 
@@ -86,11 +77,6 @@ public class TcpServerImpl implements Runnable, TcpServer {
         SocketChannel socketChannel = clients.get(address);
         try {
             if (socketChannel != null) {
-                //socketChannel.write(msg);
-                //ByteBuffer buffer = ByteBuffer.wrap(msg.getBytes("UTF-8"));
-                //socketChannel.write(buffer);
-                //System.out.println(msg);
-                //buffer.clear();
                 send(socketChannel, msg.getBytes("UTF-8"));
                 return true;
             }
@@ -101,6 +87,9 @@ public class TcpServerImpl implements Runnable, TcpServer {
     }
 
     public void send(SocketChannel socket, byte[] data) {
+        ByteBuffer buffer = ByteBuffer.allocate(4 + data.length).putInt(data.length).put(data);
+        buffer.position(0);
+
         synchronized (this.pendingChanges) {
             // Indicate we want the interest ops set changed
             this.pendingChanges.add(new ChangeRequest(socket, ChangeRequest.CHANGEOPS, SelectionKey.OP_WRITE));
@@ -112,7 +101,7 @@ public class TcpServerImpl implements Runnable, TcpServer {
                     queue = new ArrayList();
                     this.pendingData.put(socket, queue);
                 }
-                queue.add(ByteBuffer.wrap(data));
+                queue.add(buffer);
             }
         }
 
@@ -195,14 +184,11 @@ public class TcpServerImpl implements Runnable, TcpServer {
         int numRead;
         try {
             numRead = socketChannel.read(this.readBuffer);
-
+            List<byte[]> packets = convertFromLvContainer(socketChannel, readBuffer, numRead);
             if (numRead > 0 && messageListener != null) {
-                readBuffer.flip();
-                int limits = readBuffer.limit();
-                byte bytes[] = new byte[numRead];
-                readBuffer.get(bytes, 0, numRead);
-                //String msg = new String(bytes, cs);
-                messageListener.onReceivedMessage(address, bytes);
+                for (byte[] packet : packets) {
+                    messageListener.onReceivedMessage(address, packet);
+                }
             }
         } catch (IOException e) {
             // The remote forcibly closed the connection, cancel

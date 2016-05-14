@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/network.iml" filepath="$PROJECT_DIR$/network.iml" />
+      <module fileurl="file://$PROJECT_DIR$/network-utils.iml" filepath="$PROJECT_DIR$/network-utils.iml" />
     </modules>
   </component>
 </project>
