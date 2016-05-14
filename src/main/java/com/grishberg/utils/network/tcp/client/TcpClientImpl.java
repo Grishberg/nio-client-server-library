@@ -1,7 +1,7 @@
 package com.grishberg.utils.network.tcp.client;
 
 import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
-import com.grishberg.utils.network.interfaces.OnConnectionEstablishedListener;
+import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListener;
 import com.grishberg.utils.network.interfaces.OnMessageListener;
 import com.grishberg.utils.network.tcp.BaseBufferedReader;
 import com.grishberg.utils.network.tcp.server.ChangeRequest;
@@ -26,7 +26,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
     private final Charset cs = Charset.forName("UTF-8");
     private Thread thread;
     private final OnMessageListener messageListener;
-    private volatile OnConnectionEstablishedListener connectionListener;
+    private volatile OnServerConnectionEstablishedListener connectionListener;
     private volatile OnConnectionErrorListener errorListener;
     // The host:port combination to connect to
     private InetAddress hostAddress;
@@ -45,7 +45,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
     private volatile SocketChannel serverSocketChannel;
 
     public TcpClientImpl(OnMessageListener messageListener,
-                         OnConnectionEstablishedListener connectionListener,
+                         OnServerConnectionEstablishedListener connectionListener,
                          OnConnectionErrorListener errorListener) throws IOException {
         this.selector = this.initSelector();
         this.messageListener = messageListener;

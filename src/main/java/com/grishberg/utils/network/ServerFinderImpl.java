@@ -2,7 +2,8 @@ package com.grishberg.utils.network;
 
 import com.grishberg.utils.network.common.Utils;
 import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
-import com.grishberg.utils.network.interfaces.OnConnectionEstablishedListener;
+import com.grishberg.utils.network.interfaces.OnFinderConnectionEstablishedListener;
+import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListener;
 
 import java.io.IOException;
 import java.net.*;
@@ -19,7 +20,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     public static final String WLAN = "wlan0";
     public static final String LOCALHOST = "127.0.0.1";
     private Thread thread;
-    private OnConnectionEstablishedListener listener;
+    private OnFinderConnectionEstablishedListener listener;
     private OnConnectionErrorListener errorListener;
     private final int udpPort;
     private final int backTcpPort;
@@ -31,7 +32,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     }
 
     @Override
-    public void setConnectionListener(OnConnectionEstablishedListener listener) {
+    public void setConnectionListener(OnFinderConnectionEstablishedListener listener) {
         this.listener = listener;
     }
 
@@ -65,7 +66,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
             new Thread(sendPacketRunnable).start();
             SocketChannel socketChannel = serverSocketChannel.accept();
             if (listener != null) {
-                listener.onConnectionEstablished(socketAddressToString(socketChannel));
+                listener.onServerFound(socketAddressToString(socketChannel));
             }
             socketChannel.read(buf);
             socketChannel.close();

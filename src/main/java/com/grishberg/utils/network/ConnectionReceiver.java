@@ -1,7 +1,7 @@
 package com.grishberg.utils.network;
 
 import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
-import com.grishberg.utils.network.interfaces.OnConnectionEstablishedListener;
+import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListener;
 
 /**
  * Created by grishberg on 08.05.16.
@@ -9,6 +9,6 @@ import com.grishberg.utils.network.interfaces.OnConnectionEstablishedListener;
 public interface ConnectionReceiver {
     void start();
     void stop();
-    void setConnectionListener(OnConnectionEstablishedListener listener);
+    void setConnectionListener(OnServerConnectionEstablishedListener listener);
     void setErrorListener(OnConnectionErrorListener listener);
 }

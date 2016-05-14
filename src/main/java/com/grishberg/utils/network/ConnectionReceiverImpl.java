@@ -1,7 +1,7 @@
 package com.grishberg.utils.network;
 
 import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
-import com.grishberg.utils.network.interfaces.OnConnectionEstablishedListener;
+import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListener;
 
 import java.io.IOException;
 import java.net.*;
@@ -11,7 +11,7 @@ import java.nio.channels.SocketChannel;
  * Created by grishberg on 08.05.16.
  */
 public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
-    private OnConnectionEstablishedListener listener;
+    private OnServerConnectionEstablishedListener listener;
     private OnConnectionErrorListener errorListener;
     private final int udpPort;
     private final int backTcpPort;
@@ -26,7 +26,7 @@ public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
     }
 
     @Override
-    public void setConnectionListener(OnConnectionEstablishedListener listener) {
+    public void setConnectionListener(OnServerConnectionEstablishedListener listener) {
         this.listener = listener;
     }
 

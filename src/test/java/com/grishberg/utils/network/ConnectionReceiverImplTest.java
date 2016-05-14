@@ -1,7 +1,8 @@
 package com.grishberg.utils.network;
 
 import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
-import com.grishberg.utils.network.interfaces.OnConnectionEstablishedListener;
+import com.grishberg.utils.network.interfaces.OnFinderConnectionEstablishedListener;
+import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListener;
 import com.grishberg.utils.network.interfaces.OnMessageListener;
 import com.grishberg.utils.network.tcp.client.TcpClientImpl;
 import com.grishberg.utils.network.tcp.client.TcpClient;
@@ -68,7 +69,7 @@ public class ConnectionReceiverImplTest {
                 clientReceivedCount++;
                 signalClientMessageReceived.countDown();
             }
-        }, new OnConnectionEstablishedListener() {
+        }, new OnServerConnectionEstablishedListener() {
             @Override
             public void onConnectionEstablished(String address) {
             }
@@ -76,7 +77,7 @@ public class ConnectionReceiverImplTest {
 
         ConnectionReceiver connectionReceiver = new ConnectionReceiverImpl(UDP_PORT, BACK_TCP_PORT);
         final ServerFinder serverFinder = new ServerFinderImpl(UDP_PORT, BACK_TCP_PORT);
-        connectionReceiver.setConnectionListener(new OnConnectionEstablishedListener() {
+        connectionReceiver.setConnectionListener(new OnServerConnectionEstablishedListener() {
             @Override
             public void onConnectionEstablished(String address) {
                 isSuccessReceived = true;
@@ -92,9 +93,9 @@ public class ConnectionReceiverImplTest {
             }
         });
 
-        serverFinder.setConnectionListener(new OnConnectionEstablishedListener() {
+        serverFinder.setConnectionListener(new OnFinderConnectionEstablishedListener() {
             @Override
-            public void onConnectionEstablished(String address) {
+            public void onServerFound(String address) {
                 isSuccessEstablished = true;
                 tcpClient.connect(address, PORT);
                 tcpClient.sendMessage("test");
