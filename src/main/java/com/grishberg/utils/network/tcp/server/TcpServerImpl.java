@@ -88,6 +88,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
 
     public void send(SocketChannel socket, byte[] data) {
         ByteBuffer buffer = ByteBuffer.allocate(4 + data.length).putInt(data.length).put(data);
+        buffer.position(0);
 
         synchronized (this.pendingChanges) {
             // Indicate we want the interest ops set changed
@@ -185,8 +186,6 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
             numRead = socketChannel.read(this.readBuffer);
             List<byte[]> packets = convertFromLvContainer(socketChannel, readBuffer, numRead);
             if (numRead > 0 && messageListener != null) {
-                byte bytes[] = new byte[numRead];
-                readBuffer.get(bytes, 0, numRead);
                 for (byte[] packet : packets) {
                     messageListener.onReceivedMessage(address, packet);
                 }

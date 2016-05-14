@@ -93,6 +93,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
         ByteBuffer buffer = ByteBuffer.allocate(4 + data.length)
                 .putInt(data.length)
                 .put(data);
+        buffer.position(0);
         //.wrap(data);
         // And queue the data we want written
         synchronized (this.pendingData) {

@@ -18,12 +18,15 @@ public abstract class BaseBufferedReader implements Runnable {
         List<byte[]> buffers = new LinkedList<>();
         buffer.flip();
         int available;
+        boolean isNeedInitBuffer;
         ByteBuffer byteBuffer = notCompletedBuffers.get(socketChannel);
         while (numRead > 0) {
             if (needToRead == 0) {
                 needToRead = buffer.getInt();
-                if (byteBuffer == null) {
-                    byteBuffer = ByteBuffer.allocate(needToRead);
+                numRead -= 4;
+                isNeedInitBuffer = byteBuffer == null;
+                byteBuffer = ByteBuffer.allocate(needToRead);
+                if (isNeedInitBuffer) {
                     notCompletedBuffers.put(socketChannel, byteBuffer);
                 }
             }
