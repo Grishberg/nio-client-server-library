@@ -40,7 +40,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     private final Map<String, SocketChannel> clients;
 
     public TcpServerImpl(int port, OnMessageListener messageListener, OnAcceptedListener acceptedListener) throws IOException {
-        this.hostAddress = InetAddress.getByName("localhost");
+        this.hostAddress = InetAddress.getByName("0.0.0.0");
         this.port = port;
         this.selector = this.initSelector();
         this.worker = new EchoWorker();

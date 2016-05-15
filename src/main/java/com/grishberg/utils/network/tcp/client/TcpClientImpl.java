@@ -170,7 +170,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
         int numRead;
         try {
             numRead = socketChannel.read(this.readBuffer);
-            List<byte[]> packets = convertFromLvContainer( socketChannel, readBuffer, numRead);
+            List<byte[]> packets = convertFromLvContainer(socketChannel, readBuffer, numRead);
             // Handle the response
             for (byte[] packet : packets) {
                 handleResponse(socketChannel, packet);
@@ -238,7 +238,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
             socketChannel.finishConnect();
         } catch (IOException e) {
             // Cancel the channel's registration with our selector
-            System.out.println(e);
+            System.out.println(this.getClass().getSimpleName() + ": " + e);
             key.cancel();
             return;
         }

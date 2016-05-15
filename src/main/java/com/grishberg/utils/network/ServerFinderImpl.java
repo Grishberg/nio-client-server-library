@@ -17,8 +17,8 @@ import java.nio.channels.SocketChannel;
 public class ServerFinderImpl implements ServerFinder, Runnable {
     public static final int TIMEOUT = 5000;
     private static final String PING_MESSAGE = "ping";
-    public static final String WLAN = "wlan0";
     public static final String LOCALHOST = "127.0.0.1";
+    private static final String[] PROTOCOLS = new String[]{"wlan0", "eth0", "en0"};
     private Thread thread;
     private OnFinderConnectionEstablishedListener listener;
     private OnConnectionErrorListener errorListener;
@@ -97,7 +97,10 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
                 DatagramSocket socket = new DatagramSocket();
                 socket.setBroadcast(true);
                 byte[] sendData = PING_MESSAGE.getBytes();
-                DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, getBroadcastAddress(), udpPort);
+                DatagramPacket sendPacket = new DatagramPacket(sendData,
+                        sendData.length,
+                        getBroadcastAddress(),
+                        udpPort);
                 socket.send(sendPacket);
             } catch (IOException e) {
                 if (errorListener != null) {
@@ -108,11 +111,13 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     };
 
     private InetAddress getBroadcastAddress() throws IOException {
-        InetAddress address = Utils.getIpAddress(true, WLAN);
+        InetAddress address = Utils.getIpAddress(true, PROTOCOLS);
         if (address == null) {
             address = InetAddress.getByName(LOCALHOST);
         }
-        return address;
+        byte[] addr = address.getAddress();
+        addr[addr.length - 1] = (byte) 255;
+        return InetAddress.getByAddress(addr);
     }
 
     private String socketAddressToString(SocketChannel socketChannel) {

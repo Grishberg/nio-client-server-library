@@ -105,11 +105,12 @@ public class Utils {
      * @param useIPv4 true=return ipv4, false=return ipv6
      * @return address or empty string
      */
-    public static InetAddress getIpAddress(boolean useIPv4, String interfaceName) {
+    public static InetAddress getIpAddress(boolean useIPv4, String[] interfaceNames) {
         try {
             List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface intf : interfaces) {
-                if (interfaceName != null && !intf.getName().equalsIgnoreCase(interfaceName)) continue;
+                if (interfaceNames != null &&
+                        !Arrays.asList(interfaceNames).contains(intf.getName().toLowerCase())) continue;
                 List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
                 for (InetAddress addr : addrs) {
                     if (useIPv4 && !(addr instanceof Inet4Address)) continue;

@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
  * Created by grishberg on 08.05.16.
  */
 public class ConnectionReceiverImplTest {
-    public static final int SEND_MESSAGE_COUNT = 1000;
+    public static final int SEND_MESSAGE_COUNT = 10;
     private final Charset cs = Charset.forName("UTF-8");
     public static final int UDP_PORT = 5050;
     public static final int TIMEOUT = 100;
