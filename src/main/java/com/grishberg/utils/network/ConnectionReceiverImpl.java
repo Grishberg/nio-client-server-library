@@ -8,6 +8,7 @@ import java.net.*;
 import java.nio.channels.SocketChannel;
 
 /**
+ *
  * Created by grishberg on 08.05.16.
  */
 public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {

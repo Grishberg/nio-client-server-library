@@ -1,5 +1,6 @@
 package com.grishberg.utils.network.tcp.server;
 
+import com.grishberg.utils.network.interfaces.OnAcceptedListener;
 import com.grishberg.utils.network.interfaces.OnMessageListener;
 import com.grishberg.utils.network.tcp.BaseBufferedReader;
 
@@ -19,6 +20,7 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     private final Charset cs = Charset.forName("UTF-8");
+    private final OnAcceptedListener acceptedListener;
     private Thread thread;
     // The host:port combination to listen on
     private InetAddress hostAddress;
@@ -37,12 +39,13 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     private final OnMessageListener messageListener;
     private final Map<String, SocketChannel> clients;
 
-    public TcpServerImpl(int port, OnMessageListener messageListener) throws IOException {
+    public TcpServerImpl(int port, OnMessageListener messageListener, OnAcceptedListener acceptedListener) throws IOException {
         this.hostAddress = InetAddress.getByName("localhost");
         this.port = port;
         this.selector = this.initSelector();
         this.worker = new EchoWorker();
         this.messageListener = messageListener;
+        this.acceptedListener = acceptedListener;
         clients = new ConcurrentHashMap<>();
     }
 
@@ -162,7 +165,11 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
         SocketChannel socketChannel = serverSocketChannel.accept();
         Socket socket = socketChannel.socket();
         socketChannel.configureBlocking(false);
-        clients.put(socket.getInetAddress().getHostAddress(), socketChannel);
+        String address = socket.getInetAddress().getHostAddress();
+        clients.put(address, socketChannel);
+        if (acceptedListener != null) {
+            acceptedListener.onAccepted(address);
+        }
         // Register the new SocketChannel with our Selector, indicating
         // we'd like to be notified when there's data waiting to be read
         socketChannel.register(this.selector, SelectionKey.OP_READ);

@@ -4,6 +4,7 @@ import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
 import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListener;
 
 /**
+ * Wait for incoming broadcast connection
  * Created by grishberg on 08.05.16.
  */
 public interface ConnectionReceiver {
