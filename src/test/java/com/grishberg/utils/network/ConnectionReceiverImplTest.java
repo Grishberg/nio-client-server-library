@@ -113,6 +113,7 @@ public class ConnectionReceiverImplTest {
         });
         // test
         connectionReceiver.start();
+        serverFinder.startListeningServers();
         serverFinder.findServer();
         // wait for connection
         signal.await(TIMEOUT, TimeUnit.SECONDS);
@@ -126,7 +127,7 @@ public class ConnectionReceiverImplTest {
         System.out.printf("sent 1000 messages %d ms\n", System.currentTimeMillis() - startTime);
         Thread.sleep(10000);
         connectionReceiver.stop();
-        serverFinder.release();
+        serverFinder.stopListening();
         assertTrue("not success received", isSuccessReceived);
         assertTrue("not success established", isSuccessEstablished);
         assertTrue("not success server message received", serverMessageReceived);

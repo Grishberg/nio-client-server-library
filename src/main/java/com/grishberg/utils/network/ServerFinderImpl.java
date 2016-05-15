@@ -42,12 +42,20 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     }
 
     @Override
-    public void findServer() {
+    public void startListeningServers() {
+        if (thread.isAlive()) {
+            thread.interrupt();
+        }
         thread.start();
     }
 
     @Override
-    public void release() {
+    public void findServer() {
+        new Thread(sendPacketRunnable).start();
+    }
+
+    @Override
+    public void stopListening() {
         errorListener = null;
         listener = null;
         if (thread != null && thread.isAlive()) {
@@ -57,25 +65,26 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
 
     @Override
     public void run() {
-        ByteBuffer buf = ByteBuffer.allocate(48);
-        try {
-            ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.socket().setSoTimeout(TIMEOUT);
-            serverSocketChannel.socket().bind(new InetSocketAddress(backTcpPort));
-            serverSocketChannel.configureBlocking(true);
-            new Thread(sendPacketRunnable).start();
-            SocketChannel socketChannel = serverSocketChannel.accept();
-            if (listener != null) {
-                listener.onServerFound(socketAddressToString(socketChannel));
-            }
-            socketChannel.read(buf);
-            socketChannel.close();
-            serverSocketChannel.close();
-            // listen answer
-
-        } catch (IOException e) {
-            if (errorListener != null) {
-                errorListener.onError(e);
+        while (!Thread.currentThread().isInterrupted()) {
+            ByteBuffer buf = ByteBuffer.allocate(48);
+            try {
+                ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+                serverSocketChannel.socket().setSoTimeout(TIMEOUT);
+                serverSocketChannel.socket().bind(new InetSocketAddress(backTcpPort));
+                serverSocketChannel.configureBlocking(true);
+                SocketChannel socketChannel = serverSocketChannel.accept();
+                if (listener != null) {
+                    listener.onServerFound(socketAddressToString(socketChannel));
+                }
+                socketChannel.read(buf);
+                socketChannel.close();
+                serverSocketChannel.close();
+                // listen answer
+            } catch (IOException e) {
+                if (errorListener != null) {
+                    errorListener.onError(e);
+                }
+                break;
             }
         }
     }

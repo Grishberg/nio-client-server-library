@@ -112,6 +112,7 @@ public class Utils {
                 if (interfaceName != null && !intf.getName().equalsIgnoreCase(interfaceName)) continue;
                 List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
                 for (InetAddress addr : addrs) {
+                    if (useIPv4 && !(addr instanceof Inet4Address)) continue;
                     if (!addr.isLoopbackAddress()) {
                         return addr;
                     }
