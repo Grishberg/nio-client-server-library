@@ -60,7 +60,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     public void stopListening() {
         errorListener = null;
         listener = null;
-        if (thread != null && thread.isAlive()) {
+        if (thread != null) {
             thread.interrupt();
         }
         isStarted = false;
