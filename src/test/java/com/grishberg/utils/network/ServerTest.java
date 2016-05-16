@@ -94,4 +94,25 @@ public class ServerTest {
         System.out.printf("server count = %d\n", serverReceivedCount);
         System.out.printf("client count = %d\n", clientReceivedCount);
     }
+
+    @Test
+    public void testServerFinder() throws Exception {
+        ServerFinder serverFinder = new ServerFinderImpl(UDP_PORT, BACK_TCP_PORT);
+        serverFinder.setErrorListener(new OnConnectionErrorListener() {
+            @Override
+            public void onError(Throwable t) {
+                t.printStackTrace();
+            }
+        });
+        serverFinder.setConnectionListener(new OnFinderConnectionEstablishedListener() {
+            @Override
+            public void onServerFound(String address) {
+                System.out.println("onServerFound " + address);
+            }
+        });
+        serverFinder.startListeningServers();
+        serverFinder.findServer();
+        Thread.sleep(1000);
+        serverFinder.stopListening();
+    }
 }

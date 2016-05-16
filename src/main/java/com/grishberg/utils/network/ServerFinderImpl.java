@@ -8,6 +8,7 @@ import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListe
 import java.io.IOException;
 import java.net.*;
 import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 
@@ -25,6 +26,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     private final int udpPort;
     private final int backTcpPort;
     private boolean isStarted;
+    private ServerSocketChannel serverSocketChannel;
 
     public ServerFinderImpl(int udpPort, int backTcpPort) {
         this.udpPort = udpPort;
@@ -48,6 +50,16 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
             return;
         }
         thread = new Thread(this);
+
+        try {
+            serverSocketChannel = ServerSocketChannel.open();
+            serverSocketChannel.socket().setSoTimeout(TIMEOUT);
+            serverSocketChannel.socket().bind(new InetSocketAddress(backTcpPort));
+            serverSocketChannel.configureBlocking(true);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         thread.start();
         isStarted = true;
     }
@@ -65,6 +77,13 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
             thread.interrupt();
         }
         isStarted = false;
+        if (serverSocketChannel != null) {
+            try {
+                serverSocketChannel.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -77,23 +96,21 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
         while (!Thread.currentThread().isInterrupted()) {
             ByteBuffer buf = ByteBuffer.allocate(48);
             try {
-                ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
-                serverSocketChannel.socket().setSoTimeout(TIMEOUT);
-                serverSocketChannel.socket().bind(new InetSocketAddress(backTcpPort));
-                serverSocketChannel.configureBlocking(true);
                 SocketChannel socketChannel = serverSocketChannel.accept();
-                if (listener != null) {
-                    listener.onServerFound(socketAddressToString(socketChannel));
+                if (socketChannel != null) {
+                    if (listener != null) {
+                        listener.onServerFound(socketAddressToString(socketChannel));
+                    }
+                    socketChannel.read(buf);
+                    socketChannel.close();
                 }
-                socketChannel.read(buf);
-                socketChannel.close();
-                serverSocketChannel.close();
                 // listen answer
+            } catch (AsynchronousCloseException e) {
+                break;
             } catch (IOException e) {
                 if (errorListener != null) {
                     errorListener.onError(e);
                 }
-                break;
             }
         }
     }

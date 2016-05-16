@@ -206,7 +206,9 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
         synchronized (this.pendingData) {
             List queue = (List) this.pendingData.get(socketChannel);
             if (queue == null) {
-                System.out.printf("queue is null\n");
+                queue = new ArrayList();
+                this.pendingData.put(socketChannel, queue);
+                System.out.printf("queue is null for socket %s channel\n", socketChannel.toString());
             }
             // Write until there's not more data ...
             while (!queue.isEmpty()) {
