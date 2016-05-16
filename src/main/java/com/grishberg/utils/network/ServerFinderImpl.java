@@ -47,6 +47,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
         if (isStarted) {
             return;
         }
+        thread = new Thread(this);
         thread.start();
         isStarted = true;
     }
