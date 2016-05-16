@@ -13,4 +13,5 @@ public interface ServerFinder {
     void stopListening();
     void setConnectionListener(OnFinderConnectionEstablishedListener listener);
     void setErrorListener(OnConnectionErrorListener listener);
+    boolean isStarted();
 }

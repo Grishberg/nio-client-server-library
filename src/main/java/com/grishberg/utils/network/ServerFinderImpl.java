@@ -24,6 +24,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     private OnConnectionErrorListener errorListener;
     private final int udpPort;
     private final int backTcpPort;
+    private boolean isStarted;
 
     public ServerFinderImpl(int udpPort, int backTcpPort) {
         this.udpPort = udpPort;
@@ -43,10 +44,11 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
 
     @Override
     public void startListeningServers() {
-        if (thread.isAlive()) {
-            thread.interrupt();
+        if (isStarted) {
+            return;
         }
         thread.start();
+        isStarted = true;
     }
 
     @Override
@@ -61,6 +63,12 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
         if (thread != null && thread.isAlive()) {
             thread.interrupt();
         }
+        isStarted = false;
+    }
+
+    @Override
+    public boolean isStarted() {
+        return isStarted;
     }
 
     @Override
