@@ -1,5 +1,6 @@
 package com.grishberg.utils.network.tcp.client;
 
+import com.grishberg.utils.network.interfaces.OnCloseConnectionListener;
 import com.grishberg.utils.network.interfaces.OnConnectionErrorListener;
 import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListener;
 import com.grishberg.utils.network.interfaces.OnMessageListener;
@@ -26,8 +27,9 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
     private final Charset cs = Charset.forName("UTF-8");
     private Thread thread;
     private final OnMessageListener messageListener;
-    private volatile OnServerConnectionEstablishedListener connectionListener;
-    private volatile OnConnectionErrorListener errorListener;
+    private final OnServerConnectionEstablishedListener connectionListener;
+    private final OnConnectionErrorListener errorListener;
+    private final OnCloseConnectionListener closeConnectionListener;
     // The host:port combination to connect to
     private InetAddress hostAddress;
     private int port;
@@ -46,9 +48,11 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
 
     public TcpClientImpl(OnMessageListener messageListener,
                          OnServerConnectionEstablishedListener connectionListener,
+                         OnCloseConnectionListener closeConnectionListener,
                          OnConnectionErrorListener errorListener) throws IOException {
         this.selector = this.initSelector();
         this.messageListener = messageListener;
+        this.closeConnectionListener = closeConnectionListener;
         this.errorListener = errorListener;
         this.connectionListener = connectionListener;
     }
@@ -189,6 +193,9 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
             key.channel().close();
             key.cancel();
             socketChannel.close();
+            if (closeConnectionListener != null) {
+                closeConnectionListener.onCloseConnection(socketChannel.socket().getInetAddress().getHostAddress());
+            }
             return;
         }
     }

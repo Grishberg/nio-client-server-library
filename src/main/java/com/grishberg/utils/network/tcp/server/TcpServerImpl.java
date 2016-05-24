@@ -1,6 +1,7 @@
 package com.grishberg.utils.network.tcp.server;
 
 import com.grishberg.utils.network.interfaces.OnAcceptedListener;
+import com.grishberg.utils.network.interfaces.OnCloseConnectionListener;
 import com.grishberg.utils.network.interfaces.OnMessageListener;
 import com.grishberg.utils.network.tcp.BaseBufferedReader;
 
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     private final Charset cs = Charset.forName("UTF-8");
     private final OnAcceptedListener acceptedListener;
+    private final OnCloseConnectionListener closeConnectionListener;
     private Thread thread;
     // The host:port combination to listen on
     private InetAddress hostAddress;
@@ -39,13 +41,16 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     private final OnMessageListener messageListener;
     private final Map<String, SocketChannel> clients;
 
-    public TcpServerImpl(int port, OnMessageListener messageListener, OnAcceptedListener acceptedListener) throws IOException {
+    public TcpServerImpl(int port, OnMessageListener messageListener,
+                         OnAcceptedListener acceptedListener,
+                         OnCloseConnectionListener closeConnectionListener) throws IOException {
         this.hostAddress = InetAddress.getByName("0.0.0.0");
         this.port = port;
         this.selector = this.initSelector();
         this.worker = new EchoWorker();
         this.messageListener = messageListener;
         this.acceptedListener = acceptedListener;
+        this.closeConnectionListener = closeConnectionListener;
         clients = new ConcurrentHashMap<>();
     }
 
@@ -200,8 +205,14 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
         } catch (IOException e) {
             // The remote forcibly closed the connection, cancel
             // the selection key and close the channel.
+            e.printStackTrace();
+            System.out.println("Connection closed by client: " + address);
             key.cancel();
             socketChannel.close();
+            clients.remove(address);
+            if(closeConnectionListener != null){
+                closeConnectionListener.onCloseConnection(address);
+            }
             return;
         }
 
@@ -213,6 +224,9 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
             System.out.println("Connection closed by client: " + address);
             socketChannel.close();
             clients.remove(address);
+            if(closeConnectionListener != null){
+                closeConnectionListener.onCloseConnection(address);
+            }
             return;
         }
 
