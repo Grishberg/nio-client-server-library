@@ -59,7 +59,7 @@ public class ConnectionReceiverImplTest {
             public void onAccepted(String address) {
                 System.out.printf("accepted from %s\n", address);
             }
-        });
+        }, null);
         tcpServer.start();
         tcpClient = new TcpClientImpl(new OnMessageListener() {
             @Override
@@ -75,7 +75,7 @@ public class ConnectionReceiverImplTest {
             @Override
             public void onConnectionEstablished(String address) {
             }
-        }, null);
+        }, null, null);
 
         ConnectionReceiver connectionReceiver = new ConnectionReceiverImpl(UDP_PORT, BACK_TCP_PORT);
         final ServerFinder serverFinder = new ServerFinderImpl(UDP_PORT, BACK_TCP_PORT);
@@ -121,7 +121,7 @@ public class ConnectionReceiverImplTest {
         System.out.printf("connection %d ms\n", System.currentTimeMillis() - startTime);
         startTime = System.currentTimeMillis();
         for (int i = 0; i < SEND_MESSAGE_COUNT; i++) {
-            tcpClient.sendMessage(String.format("test %d", i));
+            tcpClient.sendMessage(generatePacket(i));
             //Thread.sleep(1);
         }
         System.out.printf("sent 1000 messages %d ms\n", System.currentTimeMillis() - startTime);
@@ -134,5 +134,14 @@ public class ConnectionReceiverImplTest {
         assertTrue("not success client message received", clientMessageReceived);
         System.out.printf("server count = %d\n", serverReceivedCount);
         System.out.printf("client count = %d\n", clientReceivedCount);
+    }
+
+    public static String generatePacket(int ind) {
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("%d", ind));
+        for (int i = 0; i < 20000; i++) {
+            sb.append(" A");
+        }
+        return sb.toString();
     }
 }

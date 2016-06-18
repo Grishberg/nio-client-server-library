@@ -1,5 +1,6 @@
 package com.grishberg.utils.network.tcp;
 
+import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.util.LinkedList;
@@ -26,13 +27,16 @@ public abstract class BaseBufferedReader implements Runnable {
                 numRead -= 4;
                 isNeedInitBuffer = byteBuffer == null;
                 byteBuffer = ByteBuffer.allocate(needToRead);
-                if (isNeedInitBuffer) {
-                    notCompletedBuffers.put(socketChannel, byteBuffer);
-                }
+                notCompletedBuffers.put(socketChannel, byteBuffer);
             }
             available = needToRead <= numRead ? needToRead : numRead;
-            for (int i = 0; i < available; i++) {
-                byteBuffer.put(buffer.get());
+            int i = 0;
+            try {
+                for (i = 0; i < available; i++) {
+                    byteBuffer.put(buffer.get());
+                }
+            } catch (BufferOverflowException e) {
+                System.out.println(e.getMessage() + " " + i);
             }
             numRead -= available;
             needToRead -= available;

@@ -59,7 +59,12 @@ public class ServerTest {
                     public void onAccepted(String address) {
                         System.out.printf("accepted from %s\n", address);
                     }
-                });
+                }, new OnCloseConnectionListener() {
+            @Override
+            public void onCloseConnection(String address) {
+                System.out.println("on connection close");
+            }
+        });
         tcpServer.start();
 
         ConnectionReceiver connectionReceiver = new ConnectionReceiverImpl(UDP_PORT, BACK_TCP_PORT);
