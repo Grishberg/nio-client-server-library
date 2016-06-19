@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Created by grishberg on 14.05.16.
+ * Read stream and parse packets.
  */
 public abstract class BaseBufferedReader implements Runnable {
     private int needToRead;
@@ -19,13 +20,11 @@ public abstract class BaseBufferedReader implements Runnable {
         List<byte[]> buffers = new LinkedList<>();
         buffer.flip();
         int available;
-        boolean isNeedInitBuffer;
         ByteBuffer byteBuffer = notCompletedBuffers.get(socketChannel);
         while (numRead > 0) {
             if (needToRead == 0) {
                 needToRead = buffer.getInt();
                 numRead -= 4;
-                isNeedInitBuffer = byteBuffer == null;
                 byteBuffer = ByteBuffer.allocate(needToRead);
                 notCompletedBuffers.put(socketChannel, byteBuffer);
             }
