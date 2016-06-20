@@ -194,7 +194,9 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
             key.cancel();
             socketChannel.close();
             if (closeConnectionListener != null) {
-                closeConnectionListener.onCloseConnection(socketChannel.socket().getInetAddress().getHostAddress());
+                InetAddress inetAddress = socketChannel.socket().getInetAddress();
+                closeConnectionListener.onCloseConnection(inetAddress != null ?
+                        inetAddress.getHostAddress() : null);
             }
             return;
         }
