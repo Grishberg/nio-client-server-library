@@ -8,6 +8,7 @@ import com.grishberg.utils.network.tcp.BaseBufferedReader;
 import com.grishberg.utils.network.tcp.server.ChangeRequest;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
@@ -159,6 +160,10 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
                         this.write(key);
                     }
                 }
+            }catch (InterruptedIOException e){
+                onStopped();
+                System.out.println("Stopped thread");
+                break;
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -183,6 +188,8 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
             // The remote forcibly closed the connection, cancel
             // the selection key and close the channel.
             key.cancel();
+            // clear socket channel buffer
+            onDisconnect(socketChannel);
             socketChannel.close();
             return;
         }
@@ -192,6 +199,8 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
             // same from our end and cancel the channel.
             key.channel().close();
             key.cancel();
+            // clear socket channel buffer
+            onDisconnect(socketChannel);
             socketChannel.close();
             if (closeConnectionListener != null) {
                 InetAddress inetAddress = socketChannel.socket().getInetAddress();

@@ -208,6 +208,8 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
             e.printStackTrace();
             System.out.println("Connection closed by client: " + address);
             key.cancel();
+            // clear socket channel buffer
+            onDisconnect(socketChannel);
             socketChannel.close();
             clients.remove(address);
             if(closeConnectionListener != null){

@@ -16,7 +16,9 @@ public abstract class BaseBufferedReader implements Runnable {
     private int needToRead;
     private final Map<SocketChannel, ByteBuffer> notCompletedBuffers = new ConcurrentHashMap<>();
 
-    protected List<byte[]> convertFromLvContainer(SocketChannel socketChannel, ByteBuffer buffer, int numRead) {
+    protected List<byte[]> convertFromLvContainer(SocketChannel socketChannel,
+                                                  ByteBuffer buffer,
+                                                  int numRead) {
         List<byte[]> buffers = new LinkedList<>();
         buffer.flip();
         int available;
@@ -27,6 +29,10 @@ public abstract class BaseBufferedReader implements Runnable {
                 numRead -= 4;
                 byteBuffer = ByteBuffer.allocate(needToRead);
                 notCompletedBuffers.put(socketChannel, byteBuffer);
+            }
+            if (byteBuffer == null) {
+                System.out.println("byteBuffer is null, create template buffer");
+                byteBuffer = ByteBuffer.allocate(numRead);
             }
             available = needToRead <= numRead ? needToRead : numRead;
             int i = 0;
@@ -44,5 +50,17 @@ public abstract class BaseBufferedReader implements Runnable {
             }
         }
         return buffers;
+    }
+
+    protected void onDisconnect(SocketChannel socketChannel) {
+        System.out.println("onDisconnect " + socketChannel);
+        if (socketChannel != null) {
+            notCompletedBuffers.remove(socketChannel);
+        }
+    }
+
+    protected void onStopped() {
+        System.out.println("onStopped ");
+        notCompletedBuffers.clear();
     }
 }
