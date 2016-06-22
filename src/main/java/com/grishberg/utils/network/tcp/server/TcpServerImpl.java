@@ -40,6 +40,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     private Map pendingData = new ConcurrentHashMap();
     private final OnMessageListener messageListener;
     private final Map<String, SocketChannel> clients;
+    private volatile boolean isStopping;
 
     public TcpServerImpl(int port, OnMessageListener messageListener,
                          OnAcceptedListener acceptedListener,
@@ -66,7 +67,19 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     @Override
     public void stop() {
         if (thread != null) {
+            System.out.println("try to stop server");
             thread.interrupt();
+            isStopping = true;
+
+            thread.interrupt();
+            synchronized (this.pendingData) {
+                this.pendingData.notifyAll();
+            }
+            try {
+                thread.join(5000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -122,6 +135,10 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
             try {
                 // Process any pending changes
                 synchronized (this.pendingChanges) {
+                    if (isStopping) {
+                        System.out.println("stop server");
+                        return;
+                    }
                     Iterator changes = this.pendingChanges.iterator();
                     while (changes.hasNext()) {
                         ChangeRequest change = (ChangeRequest) changes.next();
@@ -212,7 +229,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
             onDisconnect(socketChannel);
             socketChannel.close();
             clients.remove(address);
-            if(closeConnectionListener != null){
+            if (closeConnectionListener != null) {
                 closeConnectionListener.onCloseConnection(address);
             }
             return;
@@ -226,7 +243,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
             System.out.println("Connection closed by client: " + address);
             socketChannel.close();
             clients.remove(address);
-            if(closeConnectionListener != null){
+            if (closeConnectionListener != null) {
                 closeConnectionListener.onCloseConnection(address);
             }
             return;
