@@ -46,6 +46,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
     private Map rspHandlers = new ConcurrentHashMap();
     private final RspHandler handler = new RspHandler();
     private volatile SocketChannel serverSocketChannel;
+    private volatile boolean isStopping;
 
     public TcpClientImpl(OnMessageListener messageListener,
                          OnServerConnectionEstablishedListener connectionListener,
@@ -63,10 +64,22 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
         this.port = port;
         try {
             if (thread != null) {
+                isStopping = true;
+
                 thread.interrupt();
+                synchronized (this.pendingData) {
+                    this.pendingData.notifyAll();
+                }
+                try {
+                    thread.join(5000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
             }
+
             this.hostAddress = InetAddress.getByName(address);
             serverSocketChannel = initiateConnection();
+            isStopping = false;
             thread = new Thread(this);
             thread.start();
         } catch (IOException e) {
@@ -122,6 +135,10 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
             try {
                 // Process any pending changes
                 synchronized (this.pendingChanges) {
+                    if (isStopping) {
+                        System.out.println("received stop signal");
+                        return;
+                    }
                     Iterator changes = this.pendingChanges.iterator();
                     while (changes.hasNext()) {
                         ChangeRequest change = (ChangeRequest) changes.next();
@@ -160,7 +177,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
                         this.write(key);
                     }
                 }
-            }catch (InterruptedIOException e){
+            } catch (InterruptedIOException e) {
                 onStopped();
                 System.out.println("Stopped thread");
                 break;
