@@ -65,8 +65,6 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
         try {
             if (thread != null) {
                 isStopping = true;
-
-                thread.interrupt();
                 synchronized (this.pendingData) {
                     this.pendingData.notifyAll();
                 }
@@ -186,6 +184,13 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
             }
         }
         System.out.println("close sockets");
+        try {
+            serverSocketChannel.socket().close();
+            serverSocketChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private void read(SelectionKey key) throws IOException {
