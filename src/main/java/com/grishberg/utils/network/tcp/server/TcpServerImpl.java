@@ -131,7 +131,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     }
 
     public void run() {
-        while (true) {
+        while (!isStopping) {
             try {
                 // Process any pending changes
                 synchronized (this.pendingChanges) {
@@ -176,6 +176,14 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
             } catch (Exception e) {
                 e.printStackTrace();
             }
+        }
+
+        try {
+            System.out.println("close sockets");
+            this.serverChannel.socket().close();
+            this.serverChannel.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

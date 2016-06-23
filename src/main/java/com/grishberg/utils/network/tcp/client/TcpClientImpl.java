@@ -131,7 +131,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
     }
 
     public void run() {
-        while (true) {
+        while (!isStopping) {
             try {
                 // Process any pending changes
                 synchronized (this.pendingChanges) {
@@ -185,6 +185,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
                 e.printStackTrace();
             }
         }
+        System.out.println("close sockets");
     }
 
     private void read(SelectionKey key) throws IOException {
