@@ -79,6 +79,8 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
         isStarted = false;
         if (serverSocketChannel != null) {
             try {
+                System.out.println("stop listening connections");
+                serverSocketChannel.socket().close();
                 serverSocketChannel.close();
             } catch (IOException e) {
                 e.printStackTrace();
