@@ -58,7 +58,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     @Override
     public void start() {
         if (thread != null) {
-            thread.interrupt();
+            stop();
         }
         thread = new Thread(this);
         thread.start();
