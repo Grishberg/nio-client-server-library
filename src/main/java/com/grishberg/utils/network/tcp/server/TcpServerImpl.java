@@ -68,10 +68,7 @@ public class TcpServerImpl extends BaseBufferedReader implements TcpServer {
     public void stop() {
         if (thread != null) {
             System.out.println("try to stop server");
-            thread.interrupt();
             isStopping = true;
-
-            thread.interrupt();
             synchronized (this.pendingData) {
                 this.pendingData.notifyAll();
             }
