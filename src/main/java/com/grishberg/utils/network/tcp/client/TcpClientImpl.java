@@ -176,7 +176,6 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
                     }
                 }
             } catch (InterruptedIOException e) {
-                onStopped();
                 System.out.println("Stopped thread");
                 break;
             } catch (Exception e) {
@@ -185,6 +184,7 @@ public class TcpClientImpl extends BaseBufferedReader implements TcpClient {
         }
         System.out.println("close sockets");
         try {
+            onStopped();
             serverSocketChannel.socket().close();
             serverSocketChannel.close();
         } catch (IOException e) {
