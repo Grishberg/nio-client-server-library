@@ -1,8 +1,6 @@
 package com.grishberg.utils.network;
 
 import com.grishberg.utils.network.interfaces.*;
-import com.grishberg.utils.network.tcp.client.TcpClient;
-import com.grishberg.utils.network.tcp.client.TcpClientImpl;
 import com.grishberg.utils.network.tcp.server.TcpServer;
 import com.grishberg.utils.network.tcp.server.TcpServerImpl;
 import org.junit.Test;
@@ -111,8 +109,8 @@ public class ServerTest {
         });
         serverFinder.setConnectionListener(new OnFinderConnectionEstablishedListener() {
             @Override
-            public void onServerFound(String address) {
-                System.out.println("onServerFound " + address);
+            public void onServerFound(String address, String serverName) {
+                System.out.println("onServerFound " + address + " server name: " + serverName);
             }
         });
         serverFinder.startListeningServers();

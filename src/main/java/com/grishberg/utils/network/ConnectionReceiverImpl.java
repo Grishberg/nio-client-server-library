@@ -5,13 +5,17 @@ import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListe
 
 import java.io.IOException;
 import java.net.*;
+import java.nio.Buffer;
+import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 
 /**
- *
  * Created by grishberg on 08.05.16.
+ * server-side udp packet receiver
  */
 public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
+    public static final Charset UTF8 = Charset.forName("UTF-8");
     private OnServerConnectionEstablishedListener listener;
     private OnConnectionErrorListener errorListener;
     private final int udpPort;
@@ -19,8 +23,10 @@ public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
     private DatagramSocket socket;
     private Thread thread;
     private SocketChannel socketChannel;
+    private final String serverName;
 
-    public ConnectionReceiverImpl(int udpPort, int backTcpPort) {
+    public ConnectionReceiverImpl(String serverName, int udpPort, int backTcpPort) {
+        this.serverName = serverName;
         this.udpPort = udpPort;
         this.backTcpPort = backTcpPort;
         thread = new Thread(this);
@@ -51,7 +57,7 @@ public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
     @Override
     public void run() {
         try {
-            //Keep a socket open to listen to all the UDP trafic that is destined for this udpPort
+            //Keep a socket open to listen to all the UDP traffic that is destined for this udpPort
             socket = new DatagramSocket(udpPort, InetAddress.getByName("0.0.0.0"));
             socket.setBroadcast(true);
 
@@ -61,7 +67,7 @@ public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
                 byte[] recvBuf = new byte[4096];
                 DatagramPacket packet = new DatagramPacket(recvBuf, recvBuf.length);
                 socket.receive(packet);
-
+                System.out.println("ConnectionReceiverImpl: received packet");
                 //Packet received with client ip
                 String data = new String(packet.getData()).trim();
                 //TODO: check signature
@@ -94,6 +100,10 @@ public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
     private void connectToClient(InetAddress address) throws IOException {
         SocketAddress socketAddress = new InetSocketAddress(address, backTcpPort);
         socketChannel.connect(socketAddress);
+        // send server name
+        ByteBuffer buffer = ByteBuffer.allocate(1024);
+        buffer.put(serverName.getBytes(UTF8));
+        socketChannel.write(buffer);
         socketChannel.close();
     }
 

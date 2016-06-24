@@ -8,7 +8,7 @@ import com.grishberg.utils.network.interfaces.OnServerConnectionEstablishedListe
  * Created by grishberg on 08.05.16.
  */
 public interface ServerFinder {
-    void startListeningServers();
+    boolean startListeningServers();
     void findServer();
     void stopListening();
     void setConnectionListener(OnFinderConnectionEstablishedListener listener);

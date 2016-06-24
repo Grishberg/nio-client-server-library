@@ -44,24 +44,25 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
         this.errorListener = listener;
     }
 
+    /**
+     * Начать слушать входящие ответы от серверов
+     *
+     * @return
+     */
     @Override
-    public void startListeningServers() {
+    public boolean startListeningServers() {
         if (isStarted) {
-            return;
+            return true;
         }
         thread = new Thread(this);
-
         try {
-            serverSocketChannel = ServerSocketChannel.open();
-            serverSocketChannel.socket().setSoTimeout(TIMEOUT);
-            serverSocketChannel.socket().bind(new InetSocketAddress(backTcpPort));
-            serverSocketChannel.configureBlocking(true);
+            openSocketChannel();
+            thread.start();
+            isStarted = true;
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        thread.start();
-        isStarted = true;
+        return isStarted;
     }
 
     @Override
@@ -95,26 +96,33 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
 
     @Override
     public void run() {
-        while (!Thread.currentThread().isInterrupted()) {
-            ByteBuffer buf = ByteBuffer.allocate(48);
+        while (isStarted && !Thread.currentThread().isInterrupted()) {
+            ByteBuffer buf = ByteBuffer.allocate(1024);
             try {
+                if (serverSocketChannel == null || !serverSocketChannel.isOpen()) {
+                    openSocketChannel();
+                }
                 SocketChannel socketChannel = serverSocketChannel.accept();
                 if (socketChannel != null) {
-                    if (listener != null) {
-                        listener.onServerFound(socketAddressToString(socketChannel));
-                    }
                     socketChannel.read(buf);
+                    String serverName = buf.toString();
+                    //TODO: read server name
+                    if (listener != null) {
+                        listener.onServerFound(socketAddressToString(socketChannel), serverName);
+                    }
                     socketChannel.close();
                 }
                 // listen answer
             } catch (AsynchronousCloseException e) {
                 break;
             } catch (IOException e) {
+                e.printStackTrace();
                 if (errorListener != null) {
                     errorListener.onError(e);
                 }
             }
         }
+        System.out.println("ServerFinderImpl: stop run");
     }
 
     private Runnable sendPacketRunnable = new Runnable() {
@@ -137,6 +145,18 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
             }
         }
     };
+
+    /**
+     * Открыть канал
+     *
+     * @throws IOException
+     */
+    private void openSocketChannel() throws IOException {
+        serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.socket().setSoTimeout(TIMEOUT);
+        serverSocketChannel.socket().bind(new InetSocketAddress(backTcpPort));
+        serverSocketChannel.configureBlocking(true);
+    }
 
     private InetAddress getBroadcastAddress() throws IOException {
         InetAddress address = Utils.getIpAddress(true, PROTOCOLS);

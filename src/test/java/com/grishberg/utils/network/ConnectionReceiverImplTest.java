@@ -97,7 +97,7 @@ public class ConnectionReceiverImplTest {
 
         serverFinder.setConnectionListener(new OnFinderConnectionEstablishedListener() {
             @Override
-            public void onServerFound(String address) {
+            public void onServerFound(String address, String serverName) {
                 isSuccessEstablished = true;
                 tcpClient.connect(address, PORT);
                 tcpClient.sendMessage("test");
