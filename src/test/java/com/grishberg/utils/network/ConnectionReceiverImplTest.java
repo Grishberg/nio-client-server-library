@@ -18,6 +18,8 @@ import static org.junit.Assert.*;
  */
 public class ConnectionReceiverImplTest {
     public static final int SEND_MESSAGE_COUNT = 10;
+    public static final int PACKET_SIZE = 20000;
+    public static final String TEST_SERVER = "test server";
     private final Charset cs = Charset.forName("UTF-8");
     public static final int UDP_PORT = 5050;
     public static final int TIMEOUT = 100;
@@ -77,7 +79,7 @@ public class ConnectionReceiverImplTest {
             }
         }, null, null);
 
-        ConnectionReceiver connectionReceiver = new ConnectionReceiverImpl(UDP_PORT, BACK_TCP_PORT);
+        ConnectionReceiver connectionReceiver = new ConnectionReceiverImpl(TEST_SERVER, UDP_PORT, BACK_TCP_PORT);
         final ServerFinder serverFinder = new ServerFinderImpl(UDP_PORT, BACK_TCP_PORT);
         connectionReceiver.setConnectionListener(new OnServerConnectionEstablishedListener() {
             @Override
@@ -98,6 +100,7 @@ public class ConnectionReceiverImplTest {
         serverFinder.setConnectionListener(new OnFinderConnectionEstablishedListener() {
             @Override
             public void onServerFound(String address, String serverName) {
+                assertEquals(TEST_SERVER, serverName);
                 isSuccessEstablished = true;
                 tcpClient.connect(address, PORT);
                 tcpClient.sendMessage("test");
@@ -125,7 +128,7 @@ public class ConnectionReceiverImplTest {
             //Thread.sleep(1);
         }
         System.out.printf("sent 1000 messages %d ms\n", System.currentTimeMillis() - startTime);
-        Thread.sleep(10000);
+        Thread.sleep(2000);
         connectionReceiver.stop();
         serverFinder.stopListening();
         assertTrue("not success received", isSuccessReceived);
@@ -139,7 +142,7 @@ public class ConnectionReceiverImplTest {
     public static String generatePacket(int ind) {
         StringBuilder sb = new StringBuilder();
         sb.append(String.format("%d", ind));
-        for (int i = 0; i < 20000; i++) {
+        for (int i = 0; i < PACKET_SIZE; i++) {
             sb.append(" A");
         }
         return sb.toString();

@@ -11,6 +11,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousCloseException;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.nio.charset.Charset;
 
 /**
  * Created by grishberg on 08.05.16.
@@ -20,6 +21,7 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
     private static final String PING_MESSAGE = "ping";
     public static final String LOCALHOST = "127.0.0.1";
     private static final String[] PROTOCOLS = new String[]{"wlan0", "eth0", "en0"};
+    public static final Charset CS_UTF8 = Charset.forName("UTF-8");
     private Thread thread;
     private OnFinderConnectionEstablishedListener listener;
     private OnConnectionErrorListener errorListener;
@@ -105,7 +107,11 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
                 SocketChannel socketChannel = serverSocketChannel.accept();
                 if (socketChannel != null) {
                     socketChannel.read(buf);
-                    String serverName = buf.toString();
+                    buf.flip();
+                    int limits = buf.limit();
+                    byte bytes[] = new byte[limits];
+                    buf.get(bytes, 0, limits);
+                    String serverName = new String(bytes, CS_UTF8);
                     //TODO: read server name
                     if (listener != null) {
                         listener.onServerFound(socketAddressToString(socketChannel), serverName);

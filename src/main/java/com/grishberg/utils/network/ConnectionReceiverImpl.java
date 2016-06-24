@@ -7,8 +7,10 @@ import java.io.IOException;
 import java.net.*;
 import java.nio.Buffer;
 import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 
 /**
  * Created by grishberg on 08.05.16.
@@ -99,11 +101,15 @@ public class ConnectionReceiverImpl implements ConnectionReceiver, Runnable {
      */
     private void connectToClient(InetAddress address) throws IOException {
         SocketAddress socketAddress = new InetSocketAddress(address, backTcpPort);
-        socketChannel.connect(socketAddress);
-        // send server name
-        ByteBuffer buffer = ByteBuffer.allocate(1024);
-        buffer.put(serverName.getBytes(UTF8));
-        socketChannel.write(buffer);
+        if (socketChannel.connect(socketAddress)) {
+            System.out.println("connected to client by UDP");
+            // send server name
+            CharsetEncoder enc = Charset.forName("UTF-8").newEncoder();
+            socketChannel.write(enc.encode(CharBuffer.wrap(serverName)));
+            //ByteBuffer buffer = ByteBuffer.allocate(1024);
+            //buffer.put(serverName.getBytes(UTF8));
+            //socketChannel.write(buffer);
+        }
         socketChannel.close();
     }
 

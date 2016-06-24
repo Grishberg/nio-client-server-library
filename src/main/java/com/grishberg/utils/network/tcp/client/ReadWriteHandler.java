@@ -10,15 +10,16 @@ import java.nio.charset.Charset;
  * Created by grishberg on 09.05.16.
  */
 public class ReadWriteHandler implements CompletionHandler<Integer, ClientAttachment> {
+    private static final Charset CS = Charset.forName("UTF-8");
+
     @Override
     public void completed(Integer result, ClientAttachment attach) {
         if (attach.isRead) {
             attach.buffer.flip();
-            Charset cs = Charset.forName("UTF-8");
             int limits = attach.buffer.limit();
             byte bytes[] = new byte[limits];
             attach.buffer.get(bytes, 0, limits);
-            String msg = new String(bytes, cs);
+            String msg = new String(bytes, CS);
             if (attach.messageListener != null) {
                 attach.messageListener.onReceivedMessage(((InetSocketAddress) attach.clientAddr).getHostString(), bytes);
             }

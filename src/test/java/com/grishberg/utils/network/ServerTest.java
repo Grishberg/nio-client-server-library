@@ -9,6 +9,7 @@ import java.nio.charset.Charset;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -16,9 +17,10 @@ import static org.junit.Assert.assertTrue;
  */
 public class ServerTest {
     public static final int SEND_MESSAGE_COUNT = 1000;
+    public static final String TEST_SERVER = "test server";
     private final Charset cs = Charset.forName("UTF-8");
     public static final int UDP_PORT = 5001;
-    public static final int TIMEOUT = 100;
+    public static final int TIMEOUT = 10;
     public static final int BACK_TCP_PORT = 5002;
     public static final int PORT = 5003;
     public static final String PONG = "pong";
@@ -65,7 +67,7 @@ public class ServerTest {
         });
         tcpServer.start();
 
-        ConnectionReceiver connectionReceiver = new ConnectionReceiverImpl(UDP_PORT, BACK_TCP_PORT);
+        ConnectionReceiver connectionReceiver = new ConnectionReceiverImpl(TEST_SERVER, UDP_PORT, BACK_TCP_PORT);
         connectionReceiver.setConnectionListener(new OnServerConnectionEstablishedListener() {
             @Override
             public void onConnectionEstablished(String address) {
@@ -110,6 +112,7 @@ public class ServerTest {
         serverFinder.setConnectionListener(new OnFinderConnectionEstablishedListener() {
             @Override
             public void onServerFound(String address, String serverName) {
+                assertEquals(TEST_SERVER, serverName);
                 System.out.println("onServerFound " + address + " server name: " + serverName);
             }
         });
