@@ -113,6 +113,8 @@ public class ServerFinderImpl implements ServerFinder, Runnable {
                     socketChannel.close();
                 }
                 // listen answer
+            } catch (SocketTimeoutException e) {
+                //timeout
             } catch (AsynchronousCloseException e) {
                 break;
             } catch (IOException e) {
